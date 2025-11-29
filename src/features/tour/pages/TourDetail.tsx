@@ -49,9 +49,12 @@ export default function TourDetail() {
       </button>
 
       <div className="tour-detail-header">
-        <div className="tour-detail-image">
-          <img src={tour.image || "/placeholder.svg?key=tour-detail"} alt={tour.name} />
-        </div>
+          <div className="tour-detail-image">
+            <img
+              src={tour.image?.startsWith("http") ? tour.image : `http://localhost:8081${tour.image}`}
+              alt={tour.name}
+            />
+          </div>
 
         <div className="tour-detail-info">
           <div className="tour-meta">

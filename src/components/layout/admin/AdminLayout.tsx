@@ -1,7 +1,7 @@
 "use client";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./SideBar";
-import "./AdminLayout.scss";
+// import "./AdminLayout.scss";
 
 export default function AdminLayout() {
   return (
@@ -18,3 +18,4 @@ export default function AdminLayout() {
     </div>
   );
 }
+

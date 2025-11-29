@@ -16,8 +16,8 @@ export default function TourList() {
   const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
-    fetchTours(1, selectedCategory)
-  }, [selectedCategory])
+    fetchTours(selectedCategory);
+  }, [selectedCategory]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,8 +57,8 @@ export default function TourList() {
           {TOUR_CATEGORIES.map((cat) => (
             <button
               key={cat.id}
-              className={`category-btn ${selectedCategory === cat.name ? "active" : ""}`}
-              onClick={() => setSelectedCategory(cat.name)}
+              className={`category-btn ${selectedCategory === cat.id ? "active" : ""}`}
+              onClick={() => setSelectedCategory(cat.id)}
             >
               {cat.name}
             </button>
@@ -77,11 +77,14 @@ export default function TourList() {
       ) : (
         <div className="tours-grid">
           {tours.map((tour) => (
-            <div key={tour.id} className="tour-card card">
-              <div className="tour-image">
-                <img src={tour.image || "/placeholder.svg?key=tour"} alt={tour.name} />
-                <span className="tour-category">{tour.category}</span>
-              </div>
+              <div key={tour.id} className="tour-card card">
+                <div className="tour-image">
+                  <img
+                    src={tour.image?.startsWith("http") ? tour.image : `http://localhost:8081${tour.image}`}
+                    alt={tour.name}
+                  />
+                  <span className="tour-category">{tour.category}</span>
+                </div>
 
               <div className="tour-content">
                 <h3>{tour.name}</h3>
