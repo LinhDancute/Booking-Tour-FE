@@ -6,14 +6,29 @@ import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import Button from "../../../components/common/Button"
 import { useTour } from "../hooks/useTour"
-import { TOUR_CATEGORIES } from "../../../utils/constants"
 import { formatCurrency } from "../../../utils/formatCurrency"
 import "./TourPages.scss"
+import { Category,tourApi } from "@/src/api/tour.api"
 
 export default function TourList() {
   const { tours, loading, error, fetchTours, searchTours } = useTour()
   const [selectedCategory, setSelectedCategory] = useState<string>("")
   const [searchQuery, setSearchQuery] = useState("")
+  const [categories,setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await tourApi.getCategories()
+        console.log(' Categories fetched:', response.data)
+        setCategories(response.data)
+      } catch (err: any) {
+        console.error(' Error fetching categories:', err)
+      }
+    }
+
+    fetchCategories()
+  }, [])
 
   useEffect(() => {
     fetchTours(selectedCategory);
@@ -54,11 +69,11 @@ export default function TourList() {
           >
             Tất cả
           </button>
-          {TOUR_CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <button
-              key={cat.id}
-              className={`category-btn ${selectedCategory === cat.id ? "active" : ""}`}
-              onClick={() => setSelectedCategory(cat.id)}
+              key={cat.categoryId}
+              className={`category-btn ${selectedCategory === String(cat.categoryId) ? "active" : ""}`}
+              onClick={() => setSelectedCategory(String(cat.categoryId))}
             >
               {cat.name}
             </button>

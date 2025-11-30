@@ -1,181 +1,108 @@
-import { Eye } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import React from 'react';
+import { User } from '../../../../api/admin.api';
+import './user-table.scss';
 
-export function UserTable() {
-  const customers = [
-    {
-      id: 1,
-      name: "Nguyen Van A",
-      email: "a@gmail.com",
-      phone: "01979327272",
-      total_bookings: 3,
-      total_spent: 5.482,
-      join_date: "01/11/2025",
-      status: true,
-    },
-    {
-      id: 2,
-      name: "Nguyen Van B",
-      email: "b@gmail.com",
-      phone: "0981234567",
-      total_bookings: 5,
-      total_spent: 7.841,
-      join_date: "28/10/2025",
-      status: false,
-    },
-    {
-      id: 3,
-      name: "Nguyen Van C",
-      email: "c@gmail.com",
-      phone: "0912345678",
-      total_bookings: 2,
-      total_spent: 3.214,
-      join_date: "25/10/2025",
-      status: true,
-    },
-    {
-      id: 4,
-      name: "Nguyen Van D",
-      email: "d@gmail.com",
-      phone: "0934567890",
-      total_bookings: 8,
-      total_spent: 12.934,
-      join_date: "20/10/2025",
-      status: true,
-    },
-    {
-      id: 5,
-      name: "Nguyen Van E",
-      email: "e@gmail.com",
-      phone: "0971239876",
-      total_bookings: 1,
-      total_spent: 1.548,
-      join_date: "15/10/2025",
-      status: false,
-    },
-    {
-      id: 6,
-      name: "Nguyen Van F",
-      email: "f@gmail.com",
-      phone: "0905554321",
-      total_bookings: 6,
-      total_spent: 9.321,
-      join_date: "10/10/2025",
-      status: true,
-    },
-    {
-      id: 7,
-      name: "Nguyen Van G",
-      email: "g@gmail.com",
-      phone: "0922345678",
-      total_bookings: 4,
-      total_spent: 6.754,
-      join_date: "08/10/2025",
-      status: false,
-    },
-    {
-      id: 8,
-      name: "Nguyen Van H",
-      email: "h@gmail.com",
-      phone: "0919988776",
-      total_bookings: 10,
-      total_spent: 15.234,
-      join_date: "05/10/2025",
-      status: true,
-    },
-    {
-      id: 9,
-      name: "Nguyen Van I",
-      email: "i@gmail.com",
-      phone: "0907766554",
-      total_bookings: 3,
-      total_spent: 4.823,
-      join_date: "02/10/2025",
-      status: false,
-    },
-    {
-      id: 10,
-      name: "Nguyen Van J",
-      email: "j@gmail.com",
-      phone: "0903344556",
-      total_bookings: 7,
-      total_spent: 10.658,
-      join_date: "30/09/2025",
-      status: true,
-    },
-  ];
+interface UserTableProps {
+  users: User[];
+  onView: (user: User) => void;
+  onEdit: (user: User) => void;
+  onDelete: (userId: number) => void;
+  onToggleStatus: (userId: number, currentStatus: string) => void;
+}
 
-  const getStatus = (status: boolean) => {
-    return status ? (
-      <Badge className="bg-green-300 text-green-800 font-medium px-2 py-1 rounded-md">
-        Active
-      </Badge>
-    ) : (
-      <Badge className="bg-gray-300 text-gray-800 font-medium px-2 py-1 rounded-md">
-        Inactive
-      </Badge>
-    );
+export default function UserTable({ users, onView, onEdit, onDelete, onToggleStatus }: UserTableProps) {
+  const getRoleBadgeClass = (role: string) => {
+    switch (role) {
+      case 'ADMIN':
+        return 'badge-admin';
+      case 'USER':
+        return 'badge-user';
+      default:
+        return 'badge-default';
+    }
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    return status === 'ACTIVE' ? 'badge-active' : 'badge-inactive';
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   return (
-    <div className="border border-white/10 shadow-lg shadow-black/40 rounded-lg overflow-hidden mt-10 bg-[#374151] hover:bg-[#3b4252] transition">
-      <Table className="w-full">
-        {/* Header */}
-        <TableHeader className="bg-[#2f3640]/70">
-          <TableRow>
-            {[
-              "Id",
-              "Tên khách hàng",
-              "Email",
-              "SĐT",
-              "Lượt đặt",
-              "Chi tiêu ($)",
-              "Ngày tham gia",
-              "Trạng thái",
-              "Hành động",
-            ].map((head, idx) => (
-              <TableHead
-                key={idx}
-                className="text-gray-200 font-semibold text-[15px] py-3"
-              >
-                {head}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-
-        {/* Body */}
-        <TableBody>
-          {customers.map((cus) => (
-            <TableRow
-              key={cus.id}
-              className="font-sans text-[15px] text-gray-200 hover:bg-[#4b5563]/50 transition"
-            >
-              <TableCell>{cus.id}</TableCell>
-              <TableCell className="font-medium text-white">
-                {cus.name}
-              </TableCell>
-              <TableCell>{cus.email}</TableCell>
-              <TableCell>{cus.phone}</TableCell>
-              <TableCell>{cus.total_bookings}</TableCell>
-              <TableCell>{cus.total_spent.toLocaleString()}</TableCell>
-              <TableCell>{cus.join_date}</TableCell>
-              <TableCell>{getStatus(cus.status)}</TableCell>
-              <TableCell>
-                <Eye className="text-blue-400 hover:text-blue-500 cursor-pointer" />
-              </TableCell>
-            </TableRow>
+    <div className="user-table">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Họ tên</th>
+            <th>Vai trò</th>
+            <th>Trạng thái</th>
+            <th>Ngày tạo</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user.id}>
+              <td>{user.id}</td>
+              <td>{user.email}</td>
+              <td>{user.fullName}</td>
+              <td>
+                <span className={`badge ${getRoleBadgeClass(user.role)}`}>
+                  {user.role}
+                </span>
+              </td>
+              <td>
+                <span className={`badge ${getStatusBadgeClass(user.status)}`}>
+                  {user.status === 'ACTIVE' ? 'Hoạt động' : 'Ngừng hoạt động'}
+                </span>
+              </td>
+              <td>{formatDate(user.createdAt)}</td>
+              <td>
+                <div className="action-buttons">
+                  <button
+                    className="btn-icon btn-view"
+                    onClick={() => onView(user)}
+                    title="Xem chi tiết"
+                  >
+                    <i className="fas fa-eye"></i>
+                  </button>
+                  <button
+                    className="btn-icon btn-edit"
+                    onClick={() => onEdit(user)}
+                    title="Chỉnh sửa"
+                  >
+                    <i className="fas fa-edit"></i>
+                  </button>
+                  <button
+                    className="btn-icon btn-toggle"
+                    onClick={() => onToggleStatus(user.id, user.status)}
+                    title={user.status === 'ACTIVE' ? 'Vô hiệu hóa' : 'Kích hoạt'}
+                  >
+                    <i className={`fas fa-${user.status === 'ACTIVE' ? 'ban' : 'check'}`}></i>
+                  </button>
+                  <button
+                    className="btn-icon btn-delete"
+                    onClick={() => onDelete(user.id)}
+                    title="Xóa"
+                  >
+                    <i className="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
           ))}
-        </TableBody>
-      </Table>
+        </tbody>
+      </table>
     </div>
   );
 }

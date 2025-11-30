@@ -14,11 +14,11 @@ import BookingList from "../features/booking/pages/BookingList";
 import BookingDetail from "../features/booking/pages/BookingDetail";
 import PaymentPage from "../features/payment/pages/PaymentPage";
 
-import  {OverviewPage}  from "../features/admin/overview/pages/Overview";
-import { UserManagementPage } from "../features/admin/managementUsers/pages/UserManagement";
-import { TourManagementPage } from "../features/admin/manegementTours/pages/TourManagement";
-import { BookingManagementPage } from "../features/admin/managementBookings/pages/BookingManagement";
-import { ReportsPage } from "../features/admin/managementReports/pages/Reports";
+import  OverviewPage  from "../features/admin/overview/pages/Overview";
+import UserManagementPage  from "../features/admin/managementUsers/pages/UserManagement";
+import TourManagementPage  from "../features/admin/manegementTours/pages/TourManagement";
+import  BookingManagementPage  from "../features/admin/managementBookings/pages/BookingManagement";
+import  ReportsPage  from "../features/admin/managementReports/pages/Reports";
 import NotFound from "../pages/NotFound";
 
 export default function AppRoutes() {

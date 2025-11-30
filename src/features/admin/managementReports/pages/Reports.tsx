@@ -1,6 +1,6 @@
 
 
-export const ReportsPage = () => {
+export default function  ReportsPage(){
     return (
         <div>
             Report Page

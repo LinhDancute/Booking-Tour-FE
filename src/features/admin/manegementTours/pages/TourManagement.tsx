@@ -1,7 +1,5 @@
 "use client"
-
 import { useState, useEffect } from "react"
-import { tourApi } from "../../../api/tour.api"
 import { useTour } from "../../../tour/hooks/useTour"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
@@ -12,7 +10,7 @@ import { TourModal } from "../components/tour-modal"
 import { CategoryModal } from "../components/category-modal"
 import { LocationModal } from "../components/location-modal"
 
-export const TourManagementPage = () => {
+export default function TourManagementPage () {
   const { tours, fetchTours, searchTours } = useTour()
   const [search, setSearch] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)

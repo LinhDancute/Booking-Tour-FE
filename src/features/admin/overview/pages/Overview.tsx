@@ -2,7 +2,7 @@ import { DollarSign, Map, Calendar, Users } from "lucide-react";
 import { RecentBookings } from "../components/recent-bookings";
 import { PopularTour } from "../components/popular-tour";
 
-export const OverviewPage = () => {
+export default function OverviewPage() {
   const cards = [
     {
       id: "1",

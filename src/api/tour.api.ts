@@ -5,6 +5,13 @@ const api = axios.create({
   baseURL: `${TOUR_API_BASE_URL}/api/tours`,
 });
 
+export interface Category {
+  categoryId: number;
+  name: string;
+  description: string;
+  status: string;
+}
+
 export const tourApi = {
   getTours: (page = 1, limit = 10) => api.get("", { params: { page, limit } }),
   getTourById: (id: string) => api.get(`/${id}`),
@@ -14,8 +21,10 @@ export const tourApi = {
   updateTour: (id: string, data: any) => api.put(`/${id}`, data),
   deleteTour: (id: string) => api.delete(`/${id}`),
 
+  // Sửa lại endpoint getCategories
   getCategories: () => api.get("/categories"),
   getLocations: () => api.get("/locations"),
+  
   uploadImage: (formData: FormData) => axios.post("http://localhost:8081/api/uploads/image", formData, {
       headers: { "Content-Type": "multipart/form-data" }
     }),

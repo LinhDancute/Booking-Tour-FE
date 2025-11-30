@@ -4,14 +4,14 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 
-// import {
-//   NativeSelect,
-//   NativeSelectOption,
-// } from "@/components/ui/native-select";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 import { BookingTable } from "../components/booking-table";
 
 import { SearchIcon } from "lucide-react";
-export const BookingManagementPage = () => {
+export default function BookingManagementPage() {
   return (
     <>
       {/* Header */}
