@@ -1,8 +1,8 @@
 import axios from "axios"
-import { API_BASE_URL } from "../utils/constants"
+import { BOOKING_API_BASE_URL } from "../utils/constants"
 
 const api = axios.create({
-  baseURL: `${API_BASE_URL}/api/bookings`,
+  baseURL: `${BOOKING_API_BASE_URL}/api/bookings`,
 })
 
 api.interceptors.request.use((config) => {
@@ -14,11 +14,12 @@ api.interceptors.request.use((config) => {
 })
 
 export const bookingApi = {
-  getBookings: () => api.get("/"),
+  // params: { page?: number, limit?: number, search?: string }
+  getBookings: (params?: Record<string, any>) => api.get("", { params }),
 
   getBookingById: (id: string) => api.get(`/${id}`),
 
-  createBooking: (tourId: string, data: any) => api.post("/", { tourId, ...data }),
+  createBooking: (tourId: string, data: any) => api.post("", { tourId, ...data }),
 
   updateBooking: (id: string, data: any) => api.put(`/${id}`, data),
 

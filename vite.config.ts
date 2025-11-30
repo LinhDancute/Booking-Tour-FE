@@ -13,11 +13,15 @@ export default defineConfig({
       port: 3000,
       proxy: {
         "/api/auth": {
-          target: "http://localhost:6060", // service-auth
+          target: "http://localhost:8080", // service-auth
           changeOrigin: true,
         },
         "/api/tours": {
           target: "http://localhost:8081", // service-tour
+          changeOrigin: true,
+        },
+        "/api/bookings": {
+          target: "http://localhost:8082", // service-booking
           changeOrigin: true,
         },
       },

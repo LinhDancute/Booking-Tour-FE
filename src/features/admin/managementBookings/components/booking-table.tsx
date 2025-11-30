@@ -9,49 +9,21 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-export function BookingTable() {
-  const bookings = [
-    {
-      id: "B001",
-      tourId: "1",
-      customerId: "C001",
-      customerName: "Sarah Johnson",
-      customerEmail: "sarah.j@email.com",
-      bookingDate: "2025-01-15",
-      tourDate: "2025-06-15",
-      numberOfPeople: 2,
-      totalPrice: 2598,
-      status: "confirmed",
-      paymentStatus: "paid",
-    },
-    {
-      id: "B002",
-      tourId: "2",
-      customerId: "C002",
-      customerName: "Michael Chen",
-      customerEmail: "m.chen@email.com",
-      bookingDate: "2025-01-20",
-      tourDate: "2025-07-20",
-      numberOfPeople: 4,
-      totalPrice: 9996,
-      status: "confirmed",
-      paymentStatus: "paid",
-    },
-    {
-      id: "B003",
-      tourId: "3",
-      customerId: "C003",
-      customerName: "Emma Williams",
-      customerEmail: "emma.w@email.com",
-      bookingDate: "2025-02-01",
-      tourDate: "2025-08-10",
-      numberOfPeople: 1,
-      totalPrice: 1899,
-      status: "pending",
-      paymentStatus: "pending",
-    },
-  ];
-  const getStatus = (status: string) => {
+export function BookingTable({
+  bookings,
+}: {
+  bookings: Array<{
+    id: string
+    customerName: string
+    customerEmail: string
+    bookingDate: string
+    tourDate?: string
+    numberOfPeople?: number
+    totalPrice?: number
+    status?: string
+  }>
+}) {
+  const getStatus = (status: string | undefined) => {
     switch (status) {
       case "confirmed":
         return <Badge className="bg-green-600 text-white">Đã xác nhận</Badge>;
@@ -103,9 +75,9 @@ export function BookingTable() {
               </TableCell>
               <TableCell>{b.customerEmail}</TableCell>
               <TableCell>{b.bookingDate}</TableCell>
-              <TableCell>{b.tourDate}</TableCell>
-              <TableCell>{b.numberOfPeople}</TableCell>
-              <TableCell>{b.totalPrice.toLocaleString()}</TableCell>
+              <TableCell>{b.tourDate || "-"}</TableCell>
+              <TableCell>{b.numberOfPeople ?? "-"}</TableCell>
+              <TableCell>{(b.totalPrice ?? 0).toLocaleString()}</TableCell>
               <TableCell>{getStatus(b.status)}</TableCell>
               <TableCell>
                 <Eye className="text-blue-400 hover:text-blue-500 cursor-pointer" />
