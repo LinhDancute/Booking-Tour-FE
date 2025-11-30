@@ -20,6 +20,10 @@ export default defineConfig({
           target: "http://localhost:8081", // service-tour
           changeOrigin: true,
         },
+        "/api/bookings": {
+          target: "http://localhost:8082", // service-booking
+          changeOrigin: true,
+        },
       },
     },
 })

@@ -9,58 +9,48 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-export function BookingTable() {
-  const bookings = [
-    {
-      id: "B001",
-      tourId: "1",
-      customerId: "C001",
-      customerName: "Sarah Johnson",
-      customerEmail: "sarah.j@email.com",
-      bookingDate: "2025-01-15",
-      tourDate: "2025-06-15",
-      numberOfPeople: 2,
-      totalPrice: 2598,
-      status: "confirmed",
-      paymentStatus: "paid",
-    },
-    {
-      id: "B002",
-      tourId: "2",
-      customerId: "C002",
-      customerName: "Michael Chen",
-      customerEmail: "m.chen@email.com",
-      bookingDate: "2025-01-20",
-      tourDate: "2025-07-20",
-      numberOfPeople: 4,
-      totalPrice: 9996,
-      status: "confirmed",
-      paymentStatus: "paid",
-    },
-    {
-      id: "B003",
-      tourId: "3",
-      customerId: "C003",
-      customerName: "Emma Williams",
-      customerEmail: "emma.w@email.com",
-      bookingDate: "2025-02-01",
-      tourDate: "2025-08-10",
-      numberOfPeople: 1,
-      totalPrice: 1899,
-      status: "pending",
-      paymentStatus: "pending",
-    },
-  ];
-  const getStatus = (status: string) => {
-    switch (status) {
+export function BookingTable({
+  bookings,
+}: {
+  bookings: Array<{
+    id: string
+    customerName: string
+    customerEmail: string
+    bookingDate: string
+    tourStartDate?: string
+    numberOfPeople?: number
+    totalPrice?: number
+    status?: string
+  }>
+}) {
+  const getStatus = (status: string | undefined) => {
+    if (!status) return <Badge className="bg-gray-500 text-white">Không rõ</Badge>;
+    const s = status.toString().toLowerCase();
+    switch (s) {
       case "confirmed":
         return <Badge className="bg-green-600 text-white">Đã xác nhận</Badge>;
       case "pending":
         return <Badge className="bg-yellow-500 text-white">Chờ xử lý</Badge>;
       case "cancelled":
+      case "canceled":
         return <Badge className="bg-red-600 text-white">Đã hủy</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-700 text-white">Bị từ chối</Badge>;
       default:
         return <Badge className="bg-gray-500 text-white">Không rõ</Badge>;
+    }
+  };
+  const formatDate = (iso?: string) => {
+    if (!iso) return "-";
+    try {
+      const d = new Date(iso);
+      return new Intl.DateTimeFormat("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(d);
+    } catch (e) {
+      return iso;
     }
   };
   return (
@@ -102,10 +92,10 @@ export function BookingTable() {
                 {b.customerName}
               </TableCell>
               <TableCell>{b.customerEmail}</TableCell>
-              <TableCell>{b.bookingDate}</TableCell>
-              <TableCell>{b.tourDate}</TableCell>
-              <TableCell>{b.numberOfPeople}</TableCell>
-              <TableCell>{b.totalPrice.toLocaleString()}</TableCell>
+              <TableCell>{formatDate(b.bookingDate)}</TableCell>
+              <TableCell>{formatDate(b.tourStartDate)}</TableCell>
+              <TableCell>{b.numberOfPeople ?? "-"}</TableCell>
+              <TableCell>{(b.totalPrice ?? 0).toLocaleString()}</TableCell>
               <TableCell>{getStatus(b.status)}</TableCell>
               <TableCell>
                 <Eye className="text-blue-400 hover:text-blue-500 cursor-pointer" />
