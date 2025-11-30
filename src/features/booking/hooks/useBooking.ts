@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { bookingApi } from "../../../api/booking.api"
 
@@ -29,9 +27,47 @@ export function useBooking() {
     setError(null)
     try {
       const response = await bookingApi.getBookings()
-      setBookings(response.data.data || response.data)
+
+      if (response.data?.data) {
+        setBookings(response.data.data)
+      } else {
+        setBookings(response.data)
+      }
+
     } catch (err: any) {
       setError(err.message || "Lỗi khi tải bookings")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchBookingsByUserId = async (userId: string) => {
+    console.log("fetchBookingsByUserId called with userId:", userId);
+
+    if (!userId) {
+      console.error("fetchBookingsByUserId: userId is empty, returning early");
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const url = `http://localhost:8082/api/bookings/user/${userId}`;
+      console.log("Fetching from URL:", url);
+
+      const res = await fetch(url)
+      console.log("Response status:", res.status);
+
+      if (!res.ok) throw new Error("Không thể tải danh sách booking")
+
+      const data = await res.json()
+      console.log("Received data:", data);
+      setBookings(data)
+
+    } catch (e: any) {
+      console.error("Error fetching bookings:", e);
+      setError("Không thể tải danh sách booking")
     } finally {
       setLoading(false)
     }
@@ -67,20 +103,25 @@ export function useBooking() {
   }
 
   const cancelBooking = async (id: string) => {
-    setLoading(true)
-    setError(null)
     try {
-      await bookingApi.cancelBooking(id)
-      setBookings(bookings.filter((b) => b.id !== id))
+      const res = await fetch(`http://localhost:8082/api/bookings/${id}/cancel`, {
+        method: "PUT"
+      })
+      if (!res.ok) return { success: false }
       return { success: true }
-    } catch (err: any) {
-      const message = err.response?.data?.message || "Lỗi khi hủy booking"
-      setError(message)
-      return { success: false, error: message }
-    } finally {
-      setLoading(false)
+    } catch {
+      return { success: false }
     }
   }
 
-  return { bookings, loading, error, fetchBookings, getBookingById, createBooking, cancelBooking }
+  return {
+    bookings,
+    loading,
+    error,
+    fetchBookings,
+    fetchBookingsByUserId,
+    getBookingById,
+    createBooking,
+    cancelBooking
+  }
 }

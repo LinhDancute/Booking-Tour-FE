@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import Button from "../../../components/common/Button"
@@ -10,35 +8,58 @@ import { BOOKING_STATUS } from "../../../utils/constants"
 import "./BookingPages.scss"
 
 export default function BookingList() {
-  const { bookings, loading, error, fetchBookings, cancelBooking } = useBooking()
+  const { bookings, loading, error, fetchBookingsByUserId, cancelBooking } = useBooking()
   const [selectedStatus, setSelectedStatus] = useState<string>("")
   const [cancelingId, setCancelingId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchBookings()
+    const userStr = localStorage.getItem("user");
+
+    if (!userStr) {
+      return;
+    }
+
+    if (!JSON.parse(userStr)?.id) {
+      return;
+    }
+
+    fetchBookingsByUserId(JSON.parse(userStr)?.id.toString());
   }, [])
 
   const handleCancelBooking = async (id: string) => {
     if (window.confirm("Bạn có chắc chắn muốn hủy booking này?")) {
       setCancelingId(id)
-      const result = await cancelBooking(id)
+      const res = await cancelBooking(id)
       setCancelingId(null)
-      if (result.success) {
-        fetchBookings()
+
+      if (res.success) {
+        const userStr = localStorage.getItem("user")
+        if (userStr) {
+          try {
+            const userId = JSON.parse(userStr)?.id;
+            if (userId) {
+              fetchBookingsByUserId(userId.toString())
+            }
+          } catch (error) {
+            console.error("Error parsing user:", error);
+          }
+        }
       }
     }
   }
 
-  const filteredBookings = selectedStatus ? bookings.filter((b) => b.status === selectedStatus) : bookings
+  const filteredBookings = selectedStatus
+    ? bookings.filter((b) => b.status === selectedStatus)
+    : bookings
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, string> = {
-      [BOOKING_STATUS.PENDING]: "pending",
-      [BOOKING_STATUS.CONFIRMED]: "confirmed",
-      [BOOKING_STATUS.CANCELLED]: "cancelled",
-      [BOOKING_STATUS.COMPLETED]: "completed",
+    const mapStatus: any = {
+      PENDING: "pending",
+      CONFIRMED: "confirmed",
+      CANCELLED: "cancelled",
+      COMPLETED: "completed",
     }
-    return statusMap[status] || "pending"
+    return mapStatus[status] || "pending"
   }
 
   return (
@@ -49,24 +70,30 @@ export default function BookingList() {
       </div>
 
       <div className="booking-filters">
-        <button className={`status-btn ${selectedStatus === "" ? "active" : ""}`} onClick={() => setSelectedStatus("")}>
+        <button
+          onClick={() => setSelectedStatus("")}
+          className={`status-btn ${selectedStatus === "" ? "active" : ""}`}
+        >
           Tất cả ({bookings.length})
         </button>
+
         <button
-          className={`status-btn ${selectedStatus === BOOKING_STATUS.PENDING ? "active" : ""}`}
           onClick={() => setSelectedStatus(BOOKING_STATUS.PENDING)}
+          className={`status-btn ${selectedStatus === BOOKING_STATUS.PENDING ? "active" : ""}`}
         >
           Chờ xác nhận
         </button>
+
         <button
-          className={`status-btn ${selectedStatus === BOOKING_STATUS.CONFIRMED ? "active" : ""}`}
           onClick={() => setSelectedStatus(BOOKING_STATUS.CONFIRMED)}
+          className={`status-btn ${selectedStatus === BOOKING_STATUS.CONFIRMED ? "active" : ""}`}
         >
           Đã xác nhận
         </button>
+
         <button
-          className={`status-btn ${selectedStatus === BOOKING_STATUS.COMPLETED ? "active" : ""}`}
           onClick={() => setSelectedStatus(BOOKING_STATUS.COMPLETED)}
+          className={`status-btn ${selectedStatus === BOOKING_STATUS.COMPLETED ? "active" : ""}`}
         >
           Hoàn thành
         </button>
@@ -85,10 +112,10 @@ export default function BookingList() {
         </div>
       ) : (
         <div className="bookings-list">
-          {filteredBookings.map((booking) => (
+          {filteredBookings.map((booking: any) => (
             <div key={booking.id} className="booking-card card">
               <div className="booking-image">
-                <img src={booking.tourImage || "/placeholder.svg?key=booking"} alt={booking.tourName} />
+                <img src={booking.tourImage || "/placeholder.svg"} alt={booking.tourName} />
               </div>
 
               <div className="booking-content">
@@ -97,18 +124,23 @@ export default function BookingList() {
                     <h3>{booking.tourName}</h3>
                     <p className="booking-date">Đặt ngày: {formatDate(booking.bookingDate)}</p>
                   </div>
-                  <span className={`status-badge status-${getStatusBadge(booking.status)}`}>{booking.status}</span>
+
+                  <span className={`status-badge status-${getStatusBadge(booking.status)}`}>
+                    {booking.status}
+                  </span>
                 </div>
 
                 <div className="booking-details">
                   <div className="detail-item">
                     <span className="label">Số người:</span>
-                    <span className="value">{booking.participants} người</span>
+                    <span className="value">{booking.numberOfPeople} người</span>
                   </div>
+
                   <div className="detail-item">
                     <span className="label">Ngày khởi hành:</span>
                     <span className="value">{formatDate(booking.startDate)}</span>
                   </div>
+
                   <div className="detail-item">
                     <span className="label">Ngày kết thúc:</span>
                     <span className="value">{formatDate(booking.endDate)}</span>
@@ -127,6 +159,7 @@ export default function BookingList() {
                         Chi Tiết
                       </Button>
                     </Link>
+
                     {booking.status === BOOKING_STATUS.PENDING && (
                       <Button
                         size="sm"
