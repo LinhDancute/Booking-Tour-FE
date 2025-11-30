@@ -17,22 +17,40 @@ export function BookingTable({
     customerName: string
     customerEmail: string
     bookingDate: string
-    tourDate?: string
+    tourStartDate?: string
     numberOfPeople?: number
     totalPrice?: number
     status?: string
   }>
 }) {
   const getStatus = (status: string | undefined) => {
-    switch (status) {
+    if (!status) return <Badge className="bg-gray-500 text-white">Không rõ</Badge>;
+    const s = status.toString().toLowerCase();
+    switch (s) {
       case "confirmed":
         return <Badge className="bg-green-600 text-white">Đã xác nhận</Badge>;
       case "pending":
         return <Badge className="bg-yellow-500 text-white">Chờ xử lý</Badge>;
       case "cancelled":
+      case "canceled":
         return <Badge className="bg-red-600 text-white">Đã hủy</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-700 text-white">Bị từ chối</Badge>;
       default:
         return <Badge className="bg-gray-500 text-white">Không rõ</Badge>;
+    }
+  };
+  const formatDate = (iso?: string) => {
+    if (!iso) return "-";
+    try {
+      const d = new Date(iso);
+      return new Intl.DateTimeFormat("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(d);
+    } catch (e) {
+      return iso;
     }
   };
   return (
@@ -74,8 +92,8 @@ export function BookingTable({
                 {b.customerName}
               </TableCell>
               <TableCell>{b.customerEmail}</TableCell>
-              <TableCell>{b.bookingDate}</TableCell>
-              <TableCell>{b.tourDate || "-"}</TableCell>
+              <TableCell>{formatDate(b.bookingDate)}</TableCell>
+              <TableCell>{formatDate(b.tourStartDate)}</TableCell>
               <TableCell>{b.numberOfPeople ?? "-"}</TableCell>
               <TableCell>{(b.totalPrice ?? 0).toLocaleString()}</TableCell>
               <TableCell>{getStatus(b.status)}</TableCell>

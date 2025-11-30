@@ -7,16 +7,24 @@ import {
 import { BookingTable } from "../components/booking-table";
 import { SearchIcon } from "lucide-react";
 import { bookingApi } from "../../../../api/booking.api";
+import { userApi } from "../../../../api/user.api";
 
 type BookingSummary = {
   id: string;
   customerName: string;
   customerEmail: string;
   bookingDate: string;
-  tourDate?: string;
+  tourStartDate?: string;
   numberOfPeople?: number;
   totalPrice?: number;
   status?: string;
+};
+
+type UserProfile = {
+  id: number;
+  email: string;
+  fullName: string;
+  roles: string[];
 };
 
 export const BookingManagementPage = () => {
@@ -26,6 +34,23 @@ export const BookingManagementPage = () => {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userCache, setUserCache] = useState<Map<string | number, UserProfile>>(new Map());
+
+  // Fetch user by ID with caching
+  const fetchUserByIdCached = async (userId: string | number) => {
+    if (userCache.has(userId)) {
+      return userCache.get(userId);
+    }
+    try {
+      const resp = await userApi.getUserById(userId);
+      const userData = resp.data;
+      setUserCache((prev) => new Map(prev).set(userId, userData));
+      return userData;
+    } catch (err) {
+      console.error(`Failed to fetch user ${userId}:`, err);
+      return null;
+    }
+  };
 
   const fetchBookings = async (p = page, l = limit, q = search) => {
     setLoading(true);
@@ -33,20 +58,51 @@ export const BookingManagementPage = () => {
       const resp = await bookingApi.getBookings({ page: p, limit: l, search: q });
       // Try common pagination shapes: {data: {items, total}} or {data: items}
       const data = resp.data;
+      let bookingList: any[] = [];
       if (data && data.items) {
-        setBookings(data.items);
+        bookingList = data.items;
         setTotal(data.total || data.totalCount || 0);
       } else if (Array.isArray(data)) {
-        setBookings(data);
+        bookingList = data;
         setTotal(data.length);
       } else if (data && data.data) {
-        setBookings(data.data.items || data.data || []);
+        bookingList = data.data.items || data.data || [];
         setTotal(data.data.total || data.data.totalCount || 0);
       } else {
-        setBookings([]);
+        bookingList = [];
         setTotal(0);
       }
+
+      // Enrich bookings with user data
+      const enrichedBookings = await Promise.all(
+        bookingList.map(async (booking: any) => {
+          let customerName = "N/A";
+          let customerEmail = "N/A";
+
+          if (booking.userId) {
+            const user = await fetchUserByIdCached(booking.userId);
+            if (user) {
+              customerName = user.fullName || user.email || "N/A";
+              customerEmail = user.email || "N/A";
+            }
+          }
+
+          return {
+            id: booking.id,
+            customerName,
+            customerEmail,
+            bookingDate: booking.bookingDate || booking.createdAt,
+            tourStartDate: booking.tourStartDate,
+            numberOfPeople: booking.numberOfPeople,
+            totalPrice: booking.totalPrice,
+            status: booking.status,
+          };
+        })
+      );
+
+      setBookings(enrichedBookings);
     } catch (err) {
+      console.error("Failed to fetch bookings:", err);
       setBookings([]);
       setTotal(0);
     } finally {
