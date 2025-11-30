@@ -67,7 +67,7 @@ export default function BookingDetail() {
   }
 
   const handlePayment = () => {
-    navigate("/payment", { state: { bookingId: id } })
+    navigate("/payment", { state: { bookingId: id, total: booking.totalPrice } })
   }
 
   if (loading) return <div className="loading">Đang tải...</div>

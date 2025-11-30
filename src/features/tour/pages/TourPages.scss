@@ -536,4 +536,34 @@
       flex: 1;
     }
   }
+
+  .date-selection-group {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+
+    .date-selection {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+
+      label {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+      }
+
+      input[type="date"] {
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 0.9rem;
+
+        &:focus {
+          outline: none;
+          border-color: #007bff;
+          box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+        }
+      }
+    }
+  }
 }

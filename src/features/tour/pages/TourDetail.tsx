@@ -18,6 +18,8 @@ export default function TourDetail() {
   const [participants, setParticipants] = useState(1)
   const [specialRequirements, setSpecialRequirements] = useState("")
   const [bookingLoading, setBookingLoading] = useState(false)
+  const [tourStartDate, setTourStartDate] = useState<string>("")
+  const [tourEndDate, setTourEndDate] = useState<string>("")
 
   useEffect(() => {
     if (id) {
@@ -40,7 +42,6 @@ export default function TourDetail() {
     try {
       setBookingLoading(true)
 
-      // Get user from localStorage
       const userStr = localStorage.getItem("user")
       if (!userStr) {
         alert("Vui lòng đăng nhập lại")
@@ -56,22 +57,17 @@ export default function TourDetail() {
         return
       }
 
-      // Calculate total price
-      const totalPrice = tour.price * participants
-
-      // Create booking payload matching CreateBookingCommand
       const bookingData = {
         tourId: Number(id),
         userId: Number(userId),
         numberOfPeople: participants,
-        totalPrice: totalPrice,
+        totalPrice: tour.price * participants,
         bookingDate: new Date().toISOString(),
+        tourStartDate: tourStartDate ? new Date(tourStartDate).toISOString() : null,
+        tourEndDate: tourEndDate ? new Date(tourEndDate).toISOString() : null,
         specialRequirements: specialRequirements || null
       }
 
-      console.log("Creating booking with data:", bookingData)
-
-      // Call API to create booking
       const response = await fetch("http://localhost:8082/api/bookings", {
         method: "POST",
         headers: {
@@ -87,7 +83,6 @@ export default function TourDetail() {
         throw new Error("Không thể tạo booking")
       }
 
-      // Success
       alert("Đặt tour thành công! Vui lòng chờ xác nhận.")
       setShowBookingModal(false)
       navigate("/bookings")
@@ -221,13 +216,32 @@ export default function TourDetail() {
             <p>
               <strong>Giá mỗi người:</strong> {formatCurrency(tour.price)}
             </p>
-            <p>
-              <strong>Ngày khởi hành:</strong> {formatDate(tour.startDate)}
-            </p>
+          </div>
+
+          <div className="date-selection-group">
+            <div className="date-selection">
+              <label style={{ color: "black" }}>Ngày bắt đầu:</label>
+              <input
+                type="date"
+                value={tourStartDate}
+                min={new Date().toISOString().split("T")[0]}
+                onChange={(e) => setTourStartDate(e.target.value)}
+              />
+            </div>
+
+            <div className="date-selection">
+              <label style={{ color: "black" }}>Ngày kết thúc:</label>
+              <input
+                type="date"
+                value={tourEndDate}
+                min={tourStartDate || new Date().toISOString().split("T")[0]}
+                onChange={(e) => setTourEndDate(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="participants-selector">
-            <label>Số lượng người tham gia:</label>
+            <label style={{ color: "black" }}>Số lượng người tham gia:</label>
             <div className="selector">
               <button onClick={() => setParticipants(Math.max(1, participants - 1))}>-</button>
               <input type="number" value={participants} readOnly />
@@ -261,7 +275,20 @@ export default function TourDetail() {
             <Button variant="outline" onClick={() => setShowBookingModal(false)} disabled={bookingLoading}>
               Hủy
             </Button>
-            <Button onClick={handleConfirmBooking} loading={bookingLoading}>
+            <Button
+              onClick={() => {
+                if (!tourStartDate || !tourEndDate) {
+                  alert("Vui lòng chọn ngày bắt đầu và ngày kết thúc")
+                  return
+                }
+                if (new Date(tourEndDate) < new Date(tourStartDate)) {
+                  alert("Ngày kết thúc không thể trước ngày bắt đầu")
+                  return
+                }
+                handleConfirmBooking()
+              }}
+              loading={bookingLoading}
+            >
               {bookingLoading ? "Đang xử lý..." : "Xác Nhận Đặt Tour"}
             </Button>
           </div>
