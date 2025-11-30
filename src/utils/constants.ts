@@ -1,4 +1,4 @@
-export const API_BASE_URL = "http://localhost:6060"
+export const API_BASE_URL = "http://localhost:8080"
 
 export const TOUR_CATEGORIES = [
   { id: 1, name: "Biển" },
