@@ -13,7 +13,7 @@ export default defineConfig({
       port: 3000,
       proxy: {
         "/api/auth": {
-          target: "http://localhost:8080", // service-auth
+          target: "http://localhost:6060", // service-auth
           changeOrigin: true,
         },
         "/api/tours": {
