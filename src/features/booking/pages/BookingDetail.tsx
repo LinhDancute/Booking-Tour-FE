@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import Button from "../../../components/common/Button"
 import Modal from "../../../components/common/Modal"
-import { useBooking } from "../hooks/useBooking"
 import { formatCurrency } from "../../../utils/formatCurrency"
 import { formatDate, formatDateTime } from "../../../utils/formatDate"
 import { BOOKING_STATUS } from "../../../utils/constants"
@@ -13,28 +12,57 @@ import "./BookingPages.scss"
 export default function BookingDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { loading, error, getBookingById, cancelBooking } = useBooking()
+
   const [booking, setBooking] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [canceling, setCanceling] = useState(false)
 
   useEffect(() => {
-    if (id) {
-      getBookingById(id).then((data) => {
-        if (data) setBooking(data)
-      })
+    const fetchBookingDetail = async () => {
+      if (!id) return
+      setLoading(true)
+      try {
+        const bookingResp = await fetch(`http://localhost:8082/api/bookings/${id}`)
+        if (!bookingResp.ok) throw new Error("Không thể lấy thông tin booking")
+        const bookingData = await bookingResp.json()
+
+        setBooking({
+          ...bookingData,
+          participants: bookingData.numberOfPeople,
+          startDate: bookingData.tourStartDate,
+          endDate: bookingData.tourEndDate,
+          totalPrice: bookingData.totalPrice,
+          tourName: bookingData.tourName || "Tour chưa có tên",
+        })
+        setError(null)
+      } catch (err: any) {
+        console.error(err)
+        setError(err.message || "Đã xảy ra lỗi")
+      } finally {
+        setLoading(false)
+      }
     }
+
+    fetchBookingDetail()
   }, [id])
 
   const handleCancelBooking = async () => {
-    if (id) {
-      setCanceling(true)
-      const result = await cancelBooking(id)
+    if (!id) return
+    setCanceling(true)
+    try {
+      const resp = await fetch(`http://localhost:8082/api/bookings/${id}/cancel`, {
+        method: "POST",
+      })
+      if (!resp.ok) throw new Error("Hủy booking thất bại")
+      setShowCancelModal(false)
+      navigate("/bookings")
+    } catch (err: any) {
+      console.error(err)
+      alert(err.message || "Đã xảy ra lỗi")
+    } finally {
       setCanceling(false)
-      if (result.success) {
-        setShowCancelModal(false)
-        navigate("/bookings")
-      }
     }
   }
 
@@ -94,24 +122,6 @@ export default function BookingDetail() {
         </div>
 
         <div className="detail-card card">
-          <h2>Thông Tin Khách Hàng</h2>
-          <div className="info-group">
-            <div className="info-row">
-              <span className="label">Tên:</span>
-              <span className="value">{booking.customerName}</span>
-            </div>
-            <div className="info-row">
-              <span className="label">Email:</span>
-              <span className="value">{booking.customerEmail}</span>
-            </div>
-            <div className="info-row">
-              <span className="label">Điện thoại:</span>
-              <span className="value">{booking.customerPhone}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="detail-card card">
           <h2>Chi Tiết Giá</h2>
           <div className="price-breakdown">
             <div className="price-row">
@@ -164,7 +174,7 @@ export default function BookingDetail() {
           <p>Bạn có chắc chắn muốn hủy booking này?</p>
           <p className="warning">Lưu ý: Chính sách hoàn tiền sẽ được áp dụng theo điều kiện tour.</p>
 
-          <div className="modal-actions">+
+          <div className="modal-actions">
             <Button variant="outline" onClick={() => setShowCancelModal(false)}>
               Không, Giữ Lại
             </Button>

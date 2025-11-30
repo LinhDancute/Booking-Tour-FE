@@ -18,6 +18,7 @@ export function BookingTable({
     customerEmail: string
     bookingDate: string
     tourStartDate?: string
+    tourEndDate?: string
     numberOfPeople?: number
     totalPrice?: number
     status?: string
@@ -64,7 +65,8 @@ export function BookingTable({
               "Tên khách hàng",
               "Email",
               "Ngày đặt",
-              "Ngày tham gia",
+              "Ngày bắt đầu",
+              "Ngày kết thúc",
               "Số người",
               "Tổng tiền ($)",
               "Trạng thái",
@@ -94,6 +96,7 @@ export function BookingTable({
               <TableCell>{b.customerEmail}</TableCell>
               <TableCell>{formatDate(b.bookingDate)}</TableCell>
               <TableCell>{formatDate(b.tourStartDate)}</TableCell>
+              <TableCell>{formatDate(b.tourEndDate)}</TableCell>
               <TableCell>{b.numberOfPeople ?? "-"}</TableCell>
               <TableCell>{(b.totalPrice ?? 0).toLocaleString()}</TableCell>
               <TableCell>{getStatus(b.status)}</TableCell>

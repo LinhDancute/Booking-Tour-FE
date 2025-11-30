@@ -42,10 +42,7 @@ export function useBooking() {
   }
 
   const fetchBookingsByUserId = async (userId: string) => {
-    console.log("fetchBookingsByUserId called with userId:", userId);
-
     if (!userId) {
-      console.error("fetchBookingsByUserId: userId is empty, returning early");
       return
     }
 
@@ -54,19 +51,15 @@ export function useBooking() {
 
     try {
       const url = `http://localhost:8082/api/bookings/user/${userId}`;
-      console.log("Fetching from URL:", url);
 
       const res = await fetch(url)
-      console.log("Response status:", res.status);
 
       if (!res.ok) throw new Error("Không thể tải danh sách booking")
 
       const data = await res.json()
-      console.log("Received data:", data);
       setBookings(data)
 
     } catch (e: any) {
-      console.error("Error fetching bookings:", e);
       setError("Không thể tải danh sách booking")
     } finally {
       setLoading(false)

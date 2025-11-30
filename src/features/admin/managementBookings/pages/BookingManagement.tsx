@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   InputGroup,
   InputGroupAddon,
@@ -7,7 +7,6 @@ import {
 import { BookingTable } from "../components/booking-table";
 import { SearchIcon } from "lucide-react";
 import { bookingApi } from "../../../../api/booking.api";
-import { userApi } from "../../../../api/user.api";
 
 type BookingSummary = {
   id: string;
@@ -15,16 +14,11 @@ type BookingSummary = {
   customerEmail: string;
   bookingDate: string;
   tourStartDate?: string;
+  tourEndDate?: string;
   numberOfPeople?: number;
   totalPrice?: number;
   status?: string;
-};
-
-type UserProfile = {
-  id: number;
-  email: string;
-  fullName: string;
-  roles: string[];
+  userId?: string | number;
 };
 
 export const BookingManagementPage = () => {
@@ -33,74 +27,29 @@ export const BookingManagementPage = () => {
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [userCache, setUserCache] = useState<Map<string | number, UserProfile>>(new Map());
+  const [, setLoading] = useState(false);
 
-  // Fetch user by ID with caching
-  const fetchUserByIdCached = async (userId: string | number) => {
-    if (userCache.has(userId)) {
-      return userCache.get(userId);
-    }
-    try {
-      const resp = await userApi.getUserById(userId);
-      const userData = resp.data;
-      setUserCache((prev) => new Map(prev).set(userId, userData));
-      return userData;
-    } catch (err) {
-      console.error(`Failed to fetch user ${userId}:`, err);
-      return null;
-    }
-  };
-
-  const fetchBookings = async (p = page, l = limit, q = search) => {
+  const fetchBookings = useCallback(async (p = page, l = limit, q = search) => {
     setLoading(true);
     try {
       const resp = await bookingApi.getBookings({ page: p, limit: l, search: q });
-      // Try common pagination shapes: {data: {items, total}} or {data: items}
-      const data = resp.data;
-      let bookingList: any[] = [];
-      if (data && data.items) {
-        bookingList = data.items;
-        setTotal(data.total || data.totalCount || 0);
-      } else if (Array.isArray(data)) {
-        bookingList = data;
-        setTotal(data.length);
-      } else if (data && data.data) {
-        bookingList = data.data.items || data.data || [];
-        setTotal(data.data.total || data.data.totalCount || 0);
-      } else {
-        bookingList = [];
-        setTotal(0);
-      }
 
-      // Enrich bookings with user data
-      const enrichedBookings = await Promise.all(
-        bookingList.map(async (booking: any) => {
-          let customerName = "N/A";
-          let customerEmail = "N/A";
+      const bookingList = resp.data.items ?? resp.data;
+      setTotal(resp.data.total ?? bookingList.length);
 
-          if (booking.userId) {
-            const user = await fetchUserByIdCached(booking.userId);
-            if (user) {
-              customerName = user.fullName || user.email || "N/A";
-              customerEmail = user.email || "N/A";
-            }
-          }
+      const mapped = bookingList.map((b: any) => ({
+        id: b.id,
+        customerName: b.customerName ?? "-",
+        customerEmail: b.customerEmail ?? "-",
+        bookingDate: b.bookingDate ?? b.createdAt,
+        tourStartDate: b.tourStartDate ?? undefined,
+        tourEndDate: b.tourEndDate ?? undefined,
+        numberOfPeople: b.numberOfPeople ?? 0,
+        totalPrice: b.totalPrice ?? 0,
+        status: b.status ?? "unknown",
+      }));
 
-          return {
-            id: booking.id,
-            customerName,
-            customerEmail,
-            bookingDate: booking.bookingDate || booking.createdAt,
-            tourStartDate: booking.tourStartDate,
-            numberOfPeople: booking.numberOfPeople,
-            totalPrice: booking.totalPrice,
-            status: booking.status,
-          };
-        })
-      );
-
-      setBookings(enrichedBookings);
+      setBookings(mapped);
     } catch (err) {
       console.error("Failed to fetch bookings:", err);
       setBookings([]);
@@ -108,15 +57,11 @@ export const BookingManagementPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchBookings(1, limit, "");
-  }, []);
+  }, [page, limit, search]);
 
   useEffect(() => {
     fetchBookings(page, limit, search);
-  }, [page, limit]);
+  }, [fetchBookings, page, limit, search]);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
 

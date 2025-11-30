@@ -92,10 +92,17 @@ export default function BookingList() {
         </button>
 
         <button
-          onClick={() => setSelectedStatus(BOOKING_STATUS.COMPLETED)}
-          className={`status-btn ${selectedStatus === BOOKING_STATUS.COMPLETED ? "active" : ""}`}
+          onClick={() => setSelectedStatus(BOOKING_STATUS.CANCELLED)}
+          className={`status-btn ${selectedStatus === BOOKING_STATUS.CANCELLED ? "active" : ""}`}
         >
-          Hoàn thành
+          Đã hủy
+        </button>
+
+        <button
+          onClick={() => setSelectedStatus(BOOKING_STATUS.REJECTED)}
+          className={`status-btn ${selectedStatus === BOOKING_STATUS.REJECTED ? "active" : ""}`}
+        >
+          Bị từ chối
         </button>
       </div>
 
@@ -138,12 +145,12 @@ export default function BookingList() {
 
                   <div className="detail-item">
                     <span className="label">Ngày khởi hành:</span>
-                    <span className="value">{formatDate(booking.startDate)}</span>
+                    <span className="value">{formatDate(booking.tourStartDate)}</span>
                   </div>
 
                   <div className="detail-item">
                     <span className="label">Ngày kết thúc:</span>
-                    <span className="value">{formatDate(booking.endDate)}</span>
+                    <span className="value">{formatDate(booking.tourEndDate)}</span>
                   </div>
                 </div>
 

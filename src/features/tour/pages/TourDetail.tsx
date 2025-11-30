@@ -16,6 +16,8 @@ export default function TourDetail() {
   const [tour, setTour] = useState<any>(null)
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [participants, setParticipants] = useState(1)
+  const [specialRequirements, setSpecialRequirements] = useState("")
+  const [bookingLoading, setBookingLoading] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -26,7 +28,7 @@ export default function TourDetail() {
   }, [id])
 
   const handleBooking = () => {
-    const isAuthenticated = !!localStorage.getItem("token")
+    const isAuthenticated = !!localStorage.getItem("accessToken")
     if (!isAuthenticated) {
       navigate("/login")
       return
@@ -34,8 +36,68 @@ export default function TourDetail() {
     setShowBookingModal(true)
   }
 
-  const handleConfirmBooking = () => {
-    navigate("/bookings", { state: { tourId: id, participants } })
+  const handleConfirmBooking = async () => {
+    try {
+      setBookingLoading(true)
+
+      // Get user from localStorage
+      const userStr = localStorage.getItem("user")
+      if (!userStr) {
+        alert("Vui lòng đăng nhập lại")
+        navigate("/login")
+        return
+      }
+
+      const user = JSON.parse(userStr)
+      const userId = user?.id
+
+      if (!userId) {
+        alert("Không tìm thấy thông tin người dùng")
+        return
+      }
+
+      // Calculate total price
+      const totalPrice = tour.price * participants
+
+      // Create booking payload matching CreateBookingCommand
+      const bookingData = {
+        tourId: Number(id),
+        userId: Number(userId),
+        numberOfPeople: participants,
+        totalPrice: totalPrice,
+        bookingDate: new Date().toISOString(),
+        specialRequirements: specialRequirements || null
+      }
+
+      console.log("Creating booking with data:", bookingData)
+
+      // Call API to create booking
+      const response = await fetch("http://localhost:8082/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        },
+        body: JSON.stringify(bookingData)
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("Booking failed:", errorText)
+        throw new Error("Không thể tạo booking")
+      }
+
+      // Success
+      alert("Đặt tour thành công! Vui lòng chờ xác nhận.")
+      setShowBookingModal(false)
+      navigate("/bookings")
+
+    } catch (error: any) {
+      console.error("Error creating booking:", error)
+      alert(error.message || "Có lỗi xảy ra khi đặt tour")
+    } finally {
+      setBookingLoading(false)
+    }
   }
 
   if (loading) return <div className="loading">Đang tải...</div>
@@ -49,12 +111,12 @@ export default function TourDetail() {
       </button>
 
       <div className="tour-detail-header">
-          <div className="tour-detail-image">
-            <img
-              src={tour.image?.startsWith("http") ? tour.image : `http://localhost:8081${tour.image}`}
-              alt={tour.name}
-            />
-          </div>
+        <div className="tour-detail-image">
+          <img
+            src={tour.image?.startsWith("http") ? tour.image : `http://localhost:8081${tour.image}`}
+            alt={tour.name}
+          />
+        </div>
 
         <div className="tour-detail-info">
           <div className="tour-meta">
@@ -159,6 +221,9 @@ export default function TourDetail() {
             <p>
               <strong>Giá mỗi người:</strong> {formatCurrency(tour.price)}
             </p>
+            <p>
+              <strong>Ngày khởi hành:</strong> {formatDate(tour.startDate)}
+            </p>
           </div>
 
           <div className="participants-selector">
@@ -176,6 +241,16 @@ export default function TourDetail() {
             </div>
           </div>
 
+          <div className="special-requirements">
+            <label>Yêu cầu đặc biệt (tùy chọn):</label>
+            <textarea
+              value={specialRequirements}
+              onChange={(e) => setSpecialRequirements(e.target.value)}
+              placeholder="Ví dụ: Ăn chay, dị ứng thực phẩm, yêu cầu phòng riêng..."
+              rows={3}
+            />
+          </div>
+
           <div className="total-price">
             <p>
               <strong>Tổng cộng:</strong> {formatCurrency(tour.price * participants)}
@@ -183,10 +258,12 @@ export default function TourDetail() {
           </div>
 
           <div className="modal-actions">
-            <Button variant="outline" onClick={() => setShowBookingModal(false)}>
+            <Button variant="outline" onClick={() => setShowBookingModal(false)} disabled={bookingLoading}>
               Hủy
             </Button>
-            <Button onClick={handleConfirmBooking}>Tiếp Tục Đặt</Button>
+            <Button onClick={handleConfirmBooking} loading={bookingLoading}>
+              {bookingLoading ? "Đang xử lý..." : "Xác Nhận Đặt Tour"}
+            </Button>
           </div>
         </div>
       </Modal>
