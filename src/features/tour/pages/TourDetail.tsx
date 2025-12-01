@@ -6,7 +6,9 @@ import Button from "../../../components/common/Button"
 import Modal from "../../../components/common/Modal"
 import { useTour } from "../hooks/useTour"
 import { formatCurrency } from "../../../utils/formatCurrency"
-import { formatDate } from "../../../utils/formatDate"
+import { formatDate, formatDateTimeForAPI, formatDateForAPI } from "../../../utils/formatDate"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
 import "./TourPages.scss"
 
 export default function TourDetail() {
@@ -16,6 +18,11 @@ export default function TourDetail() {
   const [tour, setTour] = useState<any>(null)
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [participants, setParticipants] = useState(1)
+  const [specialRequirements, setSpecialRequirements] = useState("")
+  const [bookingLoading, setBookingLoading] = useState(false)
+  const [tourStartDate, setTourStartDate] = useState<string>("")
+  const [tourEndDate, setTourEndDate] = useState<string>("")
+  const today = new Date();
 
   useEffect(() => {
     if (id) {
@@ -26,7 +33,7 @@ export default function TourDetail() {
   }, [id])
 
   const handleBooking = () => {
-    const isAuthenticated = !!localStorage.getItem("token")
+    const isAuthenticated = !!localStorage.getItem("accessToken")
     if (!isAuthenticated) {
       navigate("/login")
       return
@@ -34,8 +41,74 @@ export default function TourDetail() {
     setShowBookingModal(true)
   }
 
-  const handleConfirmBooking = () => {
-    navigate("/bookings", { state: { tourId: id, participants } })
+  const handleConfirmBooking = async () => {
+    try {
+      setBookingLoading(true)
+
+      const userStr = localStorage.getItem("user")
+      if (!userStr) {
+        alert("Vui lòng đăng nhập lại")
+        navigate("/login")
+        return
+      }
+
+      const user = JSON.parse(userStr)
+      const userId = user?.id
+
+      if (!userId) {
+        alert("Không tìm thấy thông tin người dùng")
+        return
+      }
+
+      const bookingData = {
+        tourId: Number(id),
+        userId: Number(userId),
+        numberOfPeople: participants,
+        totalPrice: tour.price * participants,
+        bookingDate: formatDateTimeForAPI(new Date()),
+        tourStartDate: tourStartDate ? formatDateForAPI(tourStartDate) : null,
+        tourEndDate: tourEndDate ? formatDateForAPI(tourEndDate) : null,
+        specialRequirements: specialRequirements || null
+      }
+
+      const response = await fetch("http://localhost:8082/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        },
+        body: JSON.stringify(bookingData)
+      })
+
+      if (!response.ok) {
+        let errorMessage = "Không thể tạo booking"
+
+        const errorText = await response.text()
+
+        const errorData = JSON.parse(errorText)
+        if (errorData.message) {
+          errorMessage = errorData.message
+        }
+
+        if (errorText.includes("DuplicateBookingException") || errorText.includes("overlapping dates")) {
+          errorMessage = "Bạn đã có booking cho tour này trong khoảng thời gian trùng lặp. Vui lòng chọn thời gian khác hoặc hủy booking cũ."
+        } else if (errorText.includes("already has an active booking")) {
+          errorMessage = "Bạn đã có booking đang hoạt động cho tour này với thời gian trùng lặp."
+        }
+
+        throw new Error(errorMessage)
+      }
+
+      alert("Đặt tour thành công! Vui lòng chờ xác nhận.")
+      setShowBookingModal(false)
+      navigate("/bookings")
+
+    } catch (error: any) {
+      console.error("Error creating booking:", error)
+      alert(error.message || "Có lỗi xảy ra khi đặt tour")
+    } finally {
+      setBookingLoading(false)
+    }
   }
 
   if (loading) return <div className="loading">Đang tải...</div>
@@ -49,12 +122,12 @@ export default function TourDetail() {
       </button>
 
       <div className="tour-detail-header">
-          <div className="tour-detail-image">
-            <img
-              src={tour.image?.startsWith("http") ? tour.image : `http://localhost:8081${tour.image}`}
-              alt={tour.name}
-            />
-          </div>
+        <div className="tour-detail-image">
+          <img
+            src={tour.image?.startsWith("http") ? tour.image : `http://localhost:8081${tour.image}`}
+            alt={tour.name}
+          />
+        </div>
 
         <div className="tour-detail-info">
           <div className="tour-meta">
@@ -153,16 +226,58 @@ export default function TourDetail() {
       <Modal isOpen={showBookingModal} onClose={() => setShowBookingModal(false)} title="Xác Nhận Đặt Tour">
         <div className="booking-modal-content">
           <div className="booking-info">
-            <p>
+            <p style={{ color: "black" }}>
               <strong>Tour:</strong> {tour.name}
             </p>
-            <p>
+            <p style={{ color: "black" }}>
               <strong>Giá mỗi người:</strong> {formatCurrency(tour.price)}
             </p>
           </div>
 
+
+          <div className="date-selection-group">
+            <div className="date-selection">
+              <label>Ngày bắt đầu:</label>
+              <DatePicker
+                selected={tourStartDate ? new Date(tourStartDate) : null}
+                onChange={(date) => {
+                  if (!date) return;
+                  const iso = date.toISOString().split("T")[0];
+                  setTourStartDate(iso);
+
+                  if (tourEndDate && new Date(tourEndDate) < date) {
+                    setTourEndDate(iso);
+                  }
+                }}
+                minDate={today}
+                maxDate={tourEndDate ? new Date(tourEndDate) : undefined}
+                dateFormat="yyyy-MM-dd"
+                placeholderText="Chọn ngày bắt đầu"
+                className="date-picker"
+                showPopperArrow={false}
+              />
+            </div>
+
+            <div className="date-selection">
+              <label>Ngày kết thúc:</label>
+              <DatePicker
+                selected={tourEndDate ? new Date(tourEndDate) : null}
+                onChange={(date) => {
+                  if (!date) return;
+                  if (tourStartDate && date < new Date(tourStartDate)) return;
+                  setTourEndDate(date.toISOString().split("T")[0]);
+                }}
+                minDate={tourStartDate ? new Date(tourStartDate) : today}
+                dateFormat="yyyy-MM-dd"
+                placeholderText="Chọn ngày kết thúc"
+                className="date-picker"
+                showPopperArrow={false}
+              />
+            </div>
+          </div>
+
           <div className="participants-selector">
-            <label>Số lượng người tham gia:</label>
+            <label style={{ color: "black" }}>Số lượng người tham gia:</label>
             <div className="selector">
               <button onClick={() => setParticipants(Math.max(1, participants - 1))}>-</button>
               <input type="number" value={participants} readOnly />
@@ -176,6 +291,16 @@ export default function TourDetail() {
             </div>
           </div>
 
+          <div className="special-requirements">
+            <label style={{ color: "black" }}>Yêu cầu đặc biệt (tùy chọn):</label>
+            <textarea
+              value={specialRequirements}
+              onChange={(e) => setSpecialRequirements(e.target.value)}
+              placeholder="Ví dụ: Ăn chay, dị ứng thực phẩm, yêu cầu phòng riêng..."
+              rows={3}
+            />
+          </div>
+
           <div className="total-price">
             <p>
               <strong>Tổng cộng:</strong> {formatCurrency(tour.price * participants)}
@@ -183,10 +308,25 @@ export default function TourDetail() {
           </div>
 
           <div className="modal-actions">
-            <Button variant="outline" onClick={() => setShowBookingModal(false)}>
+            <Button variant="outline" onClick={() => setShowBookingModal(false)} disabled={bookingLoading}>
               Hủy
             </Button>
-            <Button onClick={handleConfirmBooking}>Tiếp Tục Đặt</Button>
+            <Button
+              onClick={() => {
+                if (!tourStartDate || !tourEndDate) {
+                  alert("Vui lòng chọn ngày bắt đầu và ngày kết thúc")
+                  return
+                }
+                if (new Date(tourEndDate) < new Date(tourStartDate)) {
+                  alert("Ngày kết thúc không thể trước ngày bắt đầu")
+                  return
+                }
+                handleConfirmBooking()
+              }}
+              loading={bookingLoading}
+            >
+              {bookingLoading ? "Đang xử lý..." : "Xác Nhận Đặt Tour"}
+            </Button>
           </div>
         </div>
       </Modal>

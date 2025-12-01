@@ -222,6 +222,10 @@
 }
 
 .booking-detail-page {
+  .text-danger {
+    color: var(--danger-color);
+  }
+
   .back-btn {
     background: none;
     border: none;

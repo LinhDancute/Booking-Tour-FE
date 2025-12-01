@@ -28,7 +28,7 @@ export function useTour() {
     setError(null);
     try {
       const response = selectedCategoryId
-          ? await tourApi.getToursByCategory(selectedCategoryId)
+          ? await tourApi.getToursByCategory(String(selectedCategoryId))
           : await tourApi.getTours();
       setTours(response.data || []);
     } catch (err: any) {
