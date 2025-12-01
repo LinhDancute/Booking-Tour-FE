@@ -22,5 +22,5 @@ export const bookingApi = {
 
   updateBooking: (id: string, data: any) => api.put(`/${id}`, data),
 
-  cancelBooking: (id: string) => api.delete(`/${id}`),
+  cancelBooking: (id: string) => api.put(`/${id}/cancel`)
 }

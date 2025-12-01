@@ -3,9 +3,14 @@ import { DollarSign, Map, Calendar, Users } from "lucide-react";
 import { RecentBookings } from "../components/recent-bookings";
 import { PopularTour } from "../components/popular-tour";
 import { bookingApi } from "../../../../api/booking.api";
+import { tourApi } from "../../../../api/tour.api";
+
+import { useNavigate } from "react-router-dom";
 
 export const OverviewPage = () => {
+  const navigate = useNavigate();
   const [totalBookings, setTotalBookings] = useState(0);
+  const [totalTours, setTotalTours] = useState(0);
 
   useEffect(() => {
     const fetchBookingCount = async () => {
@@ -18,10 +23,22 @@ export const OverviewPage = () => {
         setTotalBookings(0);
       }
     };
-
     fetchBookingCount();
   }, []);
 
+  useEffect(() => {
+    const fetchTourCount = async () => {
+      try {
+        const resp = await tourApi.getTours();
+        const data = resp.data;
+        setTotalTours(Array.isArray(data) ? data.length : 0);
+      } catch (err) {
+        console.error("Failed to fetch total tours:", err);
+        setTotalTours(0);
+      }
+    };
+    fetchTourCount();
+  }, []);
 
   const cards = [
     {
@@ -39,14 +56,16 @@ export const OverviewPage = () => {
       increase: "+8 lượt so với tháng trước",
       icon: <Calendar />,
       iconColor: "text-emerald-400",
+      onClick: () => navigate("/admin/managementBookings"),
     },
     {
       id: "3",
       title: "Tours hoạt động",
-      quantity: "5",
-      increase: "6 tour hoạt động",
+      quantity: totalTours.toString(),
+      increase: `${totalTours} tour hoạt động`,
       icon: <Map />,
       iconColor: "text-yellow-400",
+      onClick: () => navigate("/admin/managementTours"),
     },
     {
       id: "4",
@@ -74,22 +93,15 @@ export const OverviewPage = () => {
         {cards.map((card) => (
           <div
             key={card.id}
-            className="border border-gray-700 px-6 py-5 w-[320px] rounded-2xl flex gap-4 items-center justify-between shadow-md bg-[#2d3643] hover:bg-[#3b4252] transition-colors duration-200"
+            onClick={card.onClick}
+            className={`cursor-pointer border border-gray-700 px-6 py-5 w-[320px] rounded-2xl flex gap-4 items-center justify-between shadow-md bg-[#2d3643] hover:bg-[#3b4252] transition-colors duration-200`}
           >
             <div className="flex flex-col">
-              <p className="text-gray-300 text-base font-medium">
-                {card.title}
-              </p>
-              <h3 className="font-bold text-3xl text-gray-100 mt-1">
-                {card.quantity}
-              </h3>
-              <span className="italic text-sm text-green-400 mt-1">
-                {card.increase}
-              </span>
+              <p className="text-gray-300 text-base font-medium">{card.title}</p>
+              <h3 className="font-bold text-3xl text-gray-100 mt-1">{card.quantity}</h3>
+              <span className="italic text-sm text-green-400 mt-1">{card.increase}</span>
             </div>
-            <div
-              className={`p-3 rounded-lg bg-blue-500/10 ${card.iconColor}`}
-            >
+            <div className={`p-3 rounded-lg bg-blue-500/10 ${card.iconColor}`}>
               {card.icon}
             </div>
           </div>

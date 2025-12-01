@@ -2,16 +2,18 @@ import { useState } from "react"
 import { bookingApi } from "../../../api/booking.api"
 
 export interface Booking {
-  id: string;
-  customerName: string;
-  customerEmail: string;
-  bookingDate: string; 
-  tourStartDate?: string;
-  tourEndDate?: string;
-  numberOfPeople?: number;
-  totalPrice?: number;
-  status?: string;
-  rejectionReason?: string;
+  id: string
+  userId: string
+  tourId: string
+  customerName: string
+  customerEmail: string
+  bookingDate: string
+  tourStartDate?: string
+  tourEndDate?: string
+  numberOfPeople?: number
+  totalPrice?: number
+  status?: string
+  rejectionReason?: string
 }
 
 export function useBooking() {
@@ -19,46 +21,14 @@ export function useBooking() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchBookings = async () => {
+  const fetchBookings = async (params?: Record<string, any>) => {
     setLoading(true)
     setError(null)
     try {
-      const response = await bookingApi.getBookings()
-      console.log("Fetched bookings:", response.data);
-
-      if (response.data?.data) {
-        setBookings(response.data.data)
-      } else {
-        setBookings(response.data)
-      }
-
+      const res = await bookingApi.getBookings(params)
+      setBookings(res.data?.data || res.data || [])
     } catch (err: any) {
       setError(err.message || "Lỗi khi tải bookings")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchBookingsByUserId = async (userId: string) => {
-    if (!userId) {
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      const url = `http://localhost:8082/api/bookings/user/${userId}`;
-
-      const res = await fetch(url)
-
-      if (!res.ok) throw new Error("Không thể tải danh sách booking")
-
-      const data = await res.json()
-      setBookings(data)
-
-    } catch (e: any) {
-      setError("Không thể tải danh sách booking")
     } finally {
       setLoading(false)
     }
@@ -68,8 +38,8 @@ export function useBooking() {
     setLoading(true)
     setError(null)
     try {
-      const response = await bookingApi.getBookingById(id)
-      return response.data
+      const res = await bookingApi.getBookingById(id)
+      return res.data
     } catch (err: any) {
       setError(err.message || "Lỗi khi tải booking")
       return null
@@ -82,8 +52,8 @@ export function useBooking() {
     setLoading(true)
     setError(null)
     try {
-      const response = await bookingApi.createBooking(tourId, data)
-      return { success: true, booking: response.data }
+      const res = await bookingApi.createBooking(tourId, data)
+      return { success: true, booking: res.data }
     } catch (err: any) {
       const message = err.response?.data?.message || "Lỗi khi tạo booking"
       setError(message)
@@ -94,14 +64,15 @@ export function useBooking() {
   }
 
   const cancelBooking = async (id: string) => {
+    setLoading(true)
+    setError(null)
     try {
-      const res = await fetch(`http://localhost:8082/api/bookings/${id}/cancel`, {
-        method: "PUT"
-      })
-      if (!res.ok) return { success: false }
-      return { success: true }
+      const res = await bookingApi.cancelBooking(id)
+      return { success: res.status >= 200 && res.status < 300 }
     } catch {
       return { success: false }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -110,9 +81,9 @@ export function useBooking() {
     loading,
     error,
     fetchBookings,
-    fetchBookingsByUserId,
     getBookingById,
     createBooking,
-    cancelBooking
+    cancelBooking,
+    setBookings,
   }
 }

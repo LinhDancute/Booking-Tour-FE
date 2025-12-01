@@ -6,6 +6,8 @@ import { bookingApi } from "../../../../api/booking.api";
 
 type BookingSummary = {
   id: string;
+  userId: string;
+  tourId: string;
   customerName: string;
   customerEmail: string;
   bookingDate: string;
@@ -51,6 +53,8 @@ export const BookingManagementPage = () => {
       setBookings(
         data.map((b: any) => ({
           id: b.id,
+          userId: b.userId,
+          tourId: b.tourId,
           customerName: b.customerName ?? "-",
           customerEmail: b.customerEmail ?? "-",
           bookingDate: b.bookingDate ?? b.createdAt,

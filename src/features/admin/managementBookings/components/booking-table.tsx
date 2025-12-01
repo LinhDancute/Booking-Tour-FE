@@ -25,9 +25,9 @@ export function BookingTable({ bookings, onView, onReject }: BookingTableProps) 
 
     switch (status.toLowerCase()) {
       case "confirmed":
-        return <Badge className="bg-green-600 text-white">Đã xác nhận</Badge>;
+        return <Badge className="bg-green-600 text-white">Đã thanh toán</Badge>;
       case "pending":
-        return <Badge className="bg-yellow-500 text-white">Chờ xử lý</Badge>;
+        return <Badge className="bg-yellow-500 text-white">Chờ thanh toán</Badge>;
       case "cancelled":
         return <Badge className="bg-red-600 text-white">Đã hủy</Badge>;
       case "rejected":
@@ -80,7 +80,7 @@ export function BookingTable({ bookings, onView, onReject }: BookingTableProps) 
                 />
                 <button
                   className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm disabled:opacity-50"
-                  hidden={b.status?.toLowerCase() === "rejected"}
+                  hidden={b.status?.toLowerCase() !== "pending"}
                   onClick={() => onReject?.(b)}
                 >
                   Từ chối

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { bookingApi } from "../../../../api/booking.api";
+import { tourApi } from "../../../../api/tour.api";
 
 type RecentBooking = {
   id: string;
@@ -35,21 +36,38 @@ export function RecentBookings() {
     const fetchRecent = async () => {
       setLoading(true);
       try {
-        const resp = await bookingApi.getBookings({ page: 1, limit: 5, search: "" });
-        const data = resp.data.items ?? resp.data;
+        const resp = await bookingApi.getBookings({ page: 1, limit: 7, search: "" });
+        const bookings = resp.data.items ?? resp.data;
 
-        const mapped = data
-          .map((b: any) => ({
-            id: b.id,
-            customerName: b.customerName ?? "-",
-            tourName: b.tourName ?? "-",
-            status: b.status,
-            totalPrice: b.totalPrice,
-            createdAt: b.createdAt,
-          }))
-          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const mapped = await Promise.all(
+          bookings.map(async (b: any) => {
+            let tourName = "-";
+            try {
+              if (b.tourId) {
+                const tourResp = await tourApi.getTourById(b.tourId);
+                if (tourResp.status >= 200 && tourResp.status < 300) {
+                  const tourData = tourResp.data;
+                  tourName = tourData.name ?? "-";
+                }
+              }
+            } catch (err) {
+              console.warn(`Failed to fetch tour for booking ${b.id}`, err);
+            }
 
-        setRecentBookings(mapped);
+            return {
+              id: b.id,
+              customerName: b.customerName ?? "-",
+              tourName,
+              status: b.status,
+              totalPrice: b.totalPrice,
+              createdAt: b.createdAt,
+            };
+          })
+        );
+
+        setRecentBookings(
+          mapped.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        );
       } catch (err) {
         console.error("Failed to fetch recent bookings:", err);
       } finally {
