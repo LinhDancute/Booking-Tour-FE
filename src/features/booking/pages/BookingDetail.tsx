@@ -114,8 +114,14 @@ export default function BookingDetail() {
           <h2>Trạng Thái Thanh Toán</h2>
           <div className="payment-status">
             <p className="status-text">
-              <span className={`status-indicator ${booking.status === BOOKING_STATUS.CONFIRMED ? "confirmed" : "pending"}`}></span>
-              {booking.status === BOOKING_STATUS.CONFIRMED ? "Đã thanh toán" : "Chưa thanh toán"}
+              {booking.rejectionReason && booking.status === BOOKING_STATUS.REJECTED ? (
+                <span className="text-danger">{booking.rejectionReason}</span>
+              ) : (
+                <>
+                  <span className={`status-indicator ${booking.status === BOOKING_STATUS.CONFIRMED ? "confirmed" : "pending"}`}></span>
+                  {booking.status === BOOKING_STATUS.CONFIRMED ? "Đã thanh toán" : "Chưa thanh toán"}
+                </>
+              )}
             </p>
             <p className="amount">{formatCurrency(booking.totalPrice)}</p>
           </div>
