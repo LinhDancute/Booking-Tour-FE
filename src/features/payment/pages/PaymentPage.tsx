@@ -16,8 +16,9 @@ export default function PaymentPage() {
   const navigate = useNavigate()
   const { createPayment, confirmPayment, loading, error } = usePayment()
 
+  console.log(location.state)
   const bookingId = (location.state as any)?.bookingId || ""
-  const amount = (location.state as any)?.amount || 0
+  const total = (location.state as any)?.total || 0
 
   const [paymentMethod, setPaymentMethod] = useState("credit_card")
   const [cardData, setCardData] = useState({
@@ -87,7 +88,7 @@ export default function PaymentPage() {
     }
 
     // Create payment
-    const paymentResult = await createPayment(bookingId, amount)
+    const paymentResult = await createPayment(bookingId, total)
     if (paymentResult.success) {
       setTransactionId(paymentResult.payment.id)
       setPaymentStatus(PAYMENT_STATUS.COMPLETED)
@@ -108,7 +109,7 @@ export default function PaymentPage() {
           <div className="success-icon">✓</div>
           <h1>Thanh Toán Thành Công!</h1>
           <p>Mã giao dịch: {transactionId}</p>
-          <p>Số tiền: {formatCurrency(amount)}</p>
+          <p>Số tiền: {formatCurrency(total)}</p>
           <p className="message">Chúng tôi sẽ gửi xác nhận qua email của bạn</p>
           <Button onClick={() => navigate("/bookings")}>Quay Lại Bookings</Button>
         </div>
@@ -241,7 +242,7 @@ export default function PaymentPage() {
             )}
 
             <Button type="submit" size="lg" loading={loading} style={{ width: "100%" }}>
-              Thanh Toán {formatCurrency(amount)}
+              Thanh Toán {formatCurrency(total)}
             </Button>
           </form>
         </div>
@@ -266,9 +267,9 @@ export default function PaymentPage() {
 
             <div className="summary-divider"></div>
 
-            <div className="summary-total">
-              <span>Tổng Cộng:</span>
-              <span className="amount">{formatCurrency(amount)}</span>
+            <div className="summary-item total">
+              <span>Tổng Tiền:</span>
+              <span className="value">{formatCurrency(total)}</span>
             </div>
 
             <div className="security-info">

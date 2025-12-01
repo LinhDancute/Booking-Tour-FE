@@ -14,7 +14,6 @@ api.interceptors.request.use((config) => {
 })
 
 export const bookingApi = {
-  // params: { page?: number, limit?: number, search?: string }
   getBookings: (params?: Record<string, any>) => api.get("", { params }),
 
   getBookingById: (id: string) => api.get(`/${id}`),
@@ -23,5 +22,5 @@ export const bookingApi = {
 
   updateBooking: (id: string, data: any) => api.put(`/${id}`, data),
 
-  cancelBooking: (id: string) => api.delete(`/${id}`),
+  cancelBooking: (id: string) => api.put(`/${id}/cancel`)
 }

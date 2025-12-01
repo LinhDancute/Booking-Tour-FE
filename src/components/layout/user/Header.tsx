@@ -1,7 +1,7 @@
 "use client";
 
 import { Link } from "react-router-dom";
-import {useState } from "react";
+import { useState } from "react";
 import "./Header.scss";
 import NotificationCenter from ".././user/NotificationCenter";
 import { useAuthContext } from "../../../context/AuthContext";
@@ -9,7 +9,6 @@ import { useAuthContext } from "../../../context/AuthContext";
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout } = useAuthContext();
-  console.log("header user: ", user)
   return (
     <header className="header">
       <div className="header-container">
