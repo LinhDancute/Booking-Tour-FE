@@ -6,7 +6,9 @@ import Button from "../../../components/common/Button"
 import Modal from "../../../components/common/Modal"
 import { useTour } from "../hooks/useTour"
 import { formatCurrency } from "../../../utils/formatCurrency"
-import { formatDate } from "../../../utils/formatDate"
+import { formatDate, formatDateTimeForAPI, formatDateForAPI } from "../../../utils/formatDate"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
 import "./TourPages.scss"
 
 export default function TourDetail() {
@@ -20,6 +22,7 @@ export default function TourDetail() {
   const [bookingLoading, setBookingLoading] = useState(false)
   const [tourStartDate, setTourStartDate] = useState<string>("")
   const [tourEndDate, setTourEndDate] = useState<string>("")
+  const today = new Date();
 
   useEffect(() => {
     if (id) {
@@ -62,9 +65,9 @@ export default function TourDetail() {
         userId: Number(userId),
         numberOfPeople: participants,
         totalPrice: tour.price * participants,
-        bookingDate: new Date().toISOString(),
-        tourStartDate: tourStartDate ? new Date(tourStartDate).toISOString() : null,
-        tourEndDate: tourEndDate ? new Date(tourEndDate).toISOString() : null,
+        bookingDate: formatDateTimeForAPI(new Date()),
+        tourStartDate: tourStartDate ? formatDateForAPI(tourStartDate) : null,
+        tourEndDate: tourEndDate ? formatDateForAPI(tourEndDate) : null,
         specialRequirements: specialRequirements || null
       }
 
@@ -78,9 +81,22 @@ export default function TourDetail() {
       })
 
       if (!response.ok) {
+        let errorMessage = "Không thể tạo booking"
+
         const errorText = await response.text()
-        console.error("Booking failed:", errorText)
-        throw new Error("Không thể tạo booking")
+
+        const errorData = JSON.parse(errorText)
+        if (errorData.message) {
+          errorMessage = errorData.message
+        }
+
+        if (errorText.includes("DuplicateBookingException") || errorText.includes("overlapping dates")) {
+          errorMessage = "Bạn đã có booking cho tour này trong khoảng thời gian trùng lặp. Vui lòng chọn thời gian khác hoặc hủy booking cũ."
+        } else if (errorText.includes("already has an active booking")) {
+          errorMessage = "Bạn đã có booking đang hoạt động cho tour này với thời gian trùng lặp."
+        }
+
+        throw new Error(errorMessage)
       }
 
       alert("Đặt tour thành công! Vui lòng chờ xác nhận.")
@@ -210,32 +226,52 @@ export default function TourDetail() {
       <Modal isOpen={showBookingModal} onClose={() => setShowBookingModal(false)} title="Xác Nhận Đặt Tour">
         <div className="booking-modal-content">
           <div className="booking-info">
-            <p>
+            <p style={{ color: "black" }}>
               <strong>Tour:</strong> {tour.name}
             </p>
-            <p>
+            <p style={{ color: "black" }}>
               <strong>Giá mỗi người:</strong> {formatCurrency(tour.price)}
             </p>
           </div>
 
+
           <div className="date-selection-group">
             <div className="date-selection">
-              <label style={{ color: "black" }}>Ngày bắt đầu:</label>
-              <input
-                type="date"
-                value={tourStartDate}
-                min={new Date().toISOString().split("T")[0]}
-                onChange={(e) => setTourStartDate(e.target.value)}
+              <label>Ngày bắt đầu:</label>
+              <DatePicker
+                selected={tourStartDate ? new Date(tourStartDate) : null}
+                onChange={(date) => {
+                  if (!date) return;
+                  const iso = date.toISOString().split("T")[0];
+                  setTourStartDate(iso);
+
+                  if (tourEndDate && new Date(tourEndDate) < date) {
+                    setTourEndDate(iso);
+                  }
+                }}
+                minDate={today}
+                maxDate={tourEndDate ? new Date(tourEndDate) : undefined}
+                dateFormat="yyyy-MM-dd"
+                placeholderText="Chọn ngày bắt đầu"
+                className="date-picker"
+                showPopperArrow={false}
               />
             </div>
 
             <div className="date-selection">
-              <label style={{ color: "black" }}>Ngày kết thúc:</label>
-              <input
-                type="date"
-                value={tourEndDate}
-                min={tourStartDate || new Date().toISOString().split("T")[0]}
-                onChange={(e) => setTourEndDate(e.target.value)}
+              <label>Ngày kết thúc:</label>
+              <DatePicker
+                selected={tourEndDate ? new Date(tourEndDate) : null}
+                onChange={(date) => {
+                  if (!date) return;
+                  if (tourStartDate && date < new Date(tourStartDate)) return;
+                  setTourEndDate(date.toISOString().split("T")[0]);
+                }}
+                minDate={tourStartDate ? new Date(tourStartDate) : today}
+                dateFormat="yyyy-MM-dd"
+                placeholderText="Chọn ngày kết thúc"
+                className="date-picker"
+                showPopperArrow={false}
               />
             </div>
           </div>
@@ -256,7 +292,7 @@ export default function TourDetail() {
           </div>
 
           <div className="special-requirements">
-            <label>Yêu cầu đặc biệt (tùy chọn):</label>
+            <label style={{ color: "black" }}>Yêu cầu đặc biệt (tùy chọn):</label>
             <textarea
               value={specialRequirements}
               onChange={(e) => setSpecialRequirements(e.target.value)}

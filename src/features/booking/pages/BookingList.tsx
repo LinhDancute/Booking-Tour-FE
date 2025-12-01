@@ -11,10 +11,23 @@ export default function BookingList() {
   const { bookings, loading, error, fetchBookingsByUserId, cancelBooking } = useBooking()
   const [selectedStatus, setSelectedStatus] = useState<string>("")
   const [cancelingId, setCancelingId] = useState<string | null>(null)
+  const validStatuses = [
+    BOOKING_STATUS.PENDING,
+    BOOKING_STATUS.CONFIRMED,
+    BOOKING_STATUS.CANCELLED,
+    BOOKING_STATUS.REJECTED,
+  ];
+
+  const countByStatus = (status: string) =>
+    bookings.filter((b) => b.status === status).length
+
+  const totalValidBookings = () =>
+    validStatuses.reduce((sum, status) => sum + countByStatus(status), 0);
+
+  console.log("Bookings:", totalValidBookings());
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
-
     if (!userStr) {
       return;
     }
@@ -74,36 +87,38 @@ export default function BookingList() {
           onClick={() => setSelectedStatus("")}
           className={`status-btn ${selectedStatus === "" ? "active" : ""}`}
         >
-          Tất cả ({bookings.length})
+          Tất cả ({totalValidBookings()})
         </button>
+
 
         <button
           onClick={() => setSelectedStatus(BOOKING_STATUS.PENDING)}
           className={`status-btn ${selectedStatus === BOOKING_STATUS.PENDING ? "active" : ""}`}
         >
-          Chờ xác nhận
+          Chờ xác nhận ({countByStatus(BOOKING_STATUS.PENDING)})
         </button>
 
         <button
           onClick={() => setSelectedStatus(BOOKING_STATUS.CONFIRMED)}
           className={`status-btn ${selectedStatus === BOOKING_STATUS.CONFIRMED ? "active" : ""}`}
         >
-          Đã xác nhận
+          Đã xác nhận ({countByStatus(BOOKING_STATUS.CONFIRMED)})
         </button>
 
         <button
           onClick={() => setSelectedStatus(BOOKING_STATUS.CANCELLED)}
           className={`status-btn ${selectedStatus === BOOKING_STATUS.CANCELLED ? "active" : ""}`}
         >
-          Đã hủy
+          Đã hủy ({countByStatus(BOOKING_STATUS.CANCELLED)})
         </button>
 
         <button
           onClick={() => setSelectedStatus(BOOKING_STATUS.REJECTED)}
           className={`status-btn ${selectedStatus === BOOKING_STATUS.REJECTED ? "active" : ""}`}
         >
-          Bị từ chối
+          Bị từ chối ({countByStatus(BOOKING_STATUS.REJECTED)})
         </button>
+
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
