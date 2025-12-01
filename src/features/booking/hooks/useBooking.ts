@@ -2,19 +2,16 @@ import { useState } from "react"
 import { bookingApi } from "../../../api/booking.api"
 
 export interface Booking {
-  id: string
-  tourId: string
-  tourName: string
-  tourImage: string
-  participants: number
-  totalPrice: number
-  status: string
-  bookingDate: string
-  startDate: string
-  endDate: string
-  customerName: string
-  customerEmail: string
-  customerPhone: string
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  bookingDate: string; 
+  tourStartDate?: string;
+  tourEndDate?: string;
+  numberOfPeople?: number;
+  totalPrice?: number;
+  status?: string;
+  rejectionReason?: string;
 }
 
 export function useBooking() {
@@ -27,6 +24,7 @@ export function useBooking() {
     setError(null)
     try {
       const response = await bookingApi.getBookings()
+      console.log("Fetched bookings:", response.data);
 
       if (response.data?.data) {
         setBookings(response.data.data)

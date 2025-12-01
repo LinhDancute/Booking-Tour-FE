@@ -24,8 +24,6 @@ export default function BookingList() {
   const totalValidBookings = () =>
     validStatuses.reduce((sum, status) => sum + countByStatus(status), 0);
 
-  console.log("Bookings:", totalValidBookings());
-
   useEffect(() => {
     const userStr = localStorage.getItem("user");
     if (!userStr) {

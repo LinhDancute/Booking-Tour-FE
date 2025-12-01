@@ -1,8 +1,28 @@
+import { useEffect, useState } from "react";
 import { DollarSign, Map, Calendar, Users } from "lucide-react";
 import { RecentBookings } from "../components/recent-bookings";
 import { PopularTour } from "../components/popular-tour";
+import { bookingApi } from "../../../../api/booking.api";
 
 export const OverviewPage = () => {
+  const [totalBookings, setTotalBookings] = useState(0);
+
+  useEffect(() => {
+    const fetchBookingCount = async () => {
+      try {
+        const resp = await bookingApi.getBookings({ page: 1, limit: 100, search: "" });
+        const bookingsArray = resp.data.items ?? resp.data;
+        setTotalBookings(bookingsArray.length);
+      } catch (err) {
+        console.error("Failed to fetch total bookings:", err);
+        setTotalBookings(0);
+      }
+    };
+
+    fetchBookingCount();
+  }, []);
+
+
   const cards = [
     {
       id: "1",
@@ -15,7 +35,7 @@ export const OverviewPage = () => {
     {
       id: "2",
       title: "Tổng số lượt đặt chỗ",
-      quantity: "3",
+      quantity: totalBookings.toString(),
       increase: "+8 lượt so với tháng trước",
       icon: <Calendar />,
       iconColor: "text-emerald-400",
@@ -42,7 +62,7 @@ export const OverviewPage = () => {
     <div className="font-sans">
       <header className="mb-8">
         <h1 className="text-3xl font-serif font-bold text-gray-100 mb-2">
-          Chào mừng quay trở lại, Admin 
+          Chào mừng quay trở lại, Admin
         </h1>
         <p className="text-gray-400 italic font-serif">
           Đây là tổng quan thống kê tours trong ngày.
